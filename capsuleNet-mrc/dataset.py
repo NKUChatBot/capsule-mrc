@@ -50,18 +50,19 @@ class BRCDataset(object):
                     if random.randint(1, 10) > 1:
                         continue
                 sample = json.loads(line.strip())
-                if len(sample['segmented_passage']) > self.max_p_len:
+
+                if len(sample['passage']) > self.max_p_len:
                     filter_long_para += 1
                     continue
-                if len(sample['segmented_query']) > self.max_q_len:
+                if len(sample['query']) > self.max_q_len:
                     filter_long_query += 1
                     continue
-                if len(sample['segmented_query']) == 0:
+                if len(sample['query']) == 0:
                     filter_zero_query += 1
                     continue
                 scores = []
                 if 'answer' in sample:
-                    fake_label = sample['label_answer']
+                    fake_label = sample['answer']
                     alternatives = sample['alternatives'].split('|')
                     for alternative in alternatives:
                         score = 0
@@ -74,19 +75,20 @@ class BRCDataset(object):
                         sample['choose_type'] = 1.0
                     else:
                         sample['choose_type'] = 0.0
-                    f_index = scores.index(min(scores))
+                    f_index = scores.index(min(scores))  # 积极答案
                     scores[f_index] = 10
-                    s_index = scores.index(min(scores))
+                    s_index = scores.index(min(scores))  # 消极答案
                     scores[s_index] = 10
-                    t_index = scores.index(min(scores))
-                    segmented_alternatives = [sample['segmented_alternatives'][f_index],
-                                              sample['segmented_alternatives'][s_index],
-                                              sample['segmented_alternatives'][t_index]]
+                    t_index = scores.index(min(scores))  # 无法确定答案
+                    segmented_alternatives = [sample['alternatives'][f_index],
+                                              sample['alternatives'][s_index],
+                                              sample['alternatives'][t_index]]
 
                     sample['segmented_alternatives'] = segmented_alternatives
-                    pos_alternatives = [sample['pos_alternatives'][f_index], sample['pos_alternatives'][s_index],
-                                        sample['pos_alternatives'][t_index]]
-                    sample['pos_alternatives'] = pos_alternatives
+                    # EDIT: @shesl-meow: these lines wasn't called in any where else
+                    # pos_alternatives = [sample['pos_alternatives'][f_index], sample['pos_alternatives'][s_index],
+                    #                     sample['pos_alternatives'][t_index]]
+                    # sample['pos_alternatives'] = pos_alternatives
                     if f_index == fake_label:
                         sample['label_answer'] = 0
                     elif s_index == fake_label:
@@ -191,11 +193,11 @@ class BRCDataset(object):
             raise NotImplementedError('No data set named as {}'.format(set_name))
         if data_set is not None:
             for sample in data_set:
-                for token in sample['segmented_passage']:
+                for token in sample['passage']:
                     yield token
-                for token in sample['segmented_query']:
+                for token in sample['query']:
                     yield token
-                for tokens in sample['segmented_alternatives']:
+                for tokens in sample['alternatives']:
                     for token in tokens:
                         yield token
 
