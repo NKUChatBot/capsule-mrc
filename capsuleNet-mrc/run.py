@@ -46,9 +46,15 @@ def parse_args():
     model_settings.add_argument('--algo', choices=['BIDAF', 'MLSTM'], default='BIDAF',
                                 help='choose the algorithm to use')
     model_settings.add_argument('--load_epoch', default=1)
-    model_settings.add_argument('--embed_size', type=int, default=300,
+    # EDIT: @shesl-meow, Tencent_AILab word2vec, the embed_size is 200
+    # model_settings.add_argument('--embed_size', type=int, default=300,
+    #                             help='size of the embeddings')
+    model_settings.add_argument('--embed_size', type=int, default=200,
                                 help='size of the embeddings')
-    model_settings.add_argument('--hidden_size', type=int, default=150,
+    # EDIT: @shesl-meow, Tencent_AILab word2vec, the embed_size is 200
+    # model_settings.add_argument('--hidden_size', type=int, default=150,
+    #                             help='size of LSTM hidden units')
+    model_settings.add_argument('--hidden_size', type=int, default=100,
                                 help='size of LSTM hidden units')
     model_settings.add_argument('--max_p_len', type=int, default=500,
                                 help='max length of passage')

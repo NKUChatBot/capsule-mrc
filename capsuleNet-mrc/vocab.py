@@ -4,7 +4,7 @@ This module implements the Vocab class for converting string to id and back
 """
 
 import numpy as np
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, KeyedVectors
 
 
 class Vocab(object):
@@ -113,7 +113,8 @@ class Vocab(object):
             embedding_path: the path of the pretrained embedding file
         """
         print('load embedding path {}'.format(embedding_path))
-        model = Word2Vec.load(embedding_path)
+        # model = Word2Vec.load(embedding_path)
+        model = KeyedVectors.load(embedding_path)
         trained_embeddings = {}
         for token in model.wv.vocab:
             if token not in self.token2id:

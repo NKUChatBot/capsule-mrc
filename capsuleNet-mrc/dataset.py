@@ -84,7 +84,7 @@ class BRCDataset(object):
                                               sample['alternatives'][s_index],
                                               sample['alternatives'][t_index]]
 
-                    sample['segmented_alternatives'] = segmented_alternatives
+                    sample['alternatives'] = segmented_alternatives
                     # EDIT: @shesl-meow: these lines wasn't called in any where else
                     # pos_alternatives = [sample['pos_alternatives'][f_index], sample['pos_alternatives'][s_index],
                     #                     sample['pos_alternatives'][t_index]]
@@ -209,10 +209,10 @@ class BRCDataset(object):
             if data_set is None:
                 continue
             for sample in data_set:
-                sample['query_token_ids'] = vocab.convert_to_ids(sample['segmented_query'])
-                sample['passage_token_ids'] = vocab.convert_to_ids(sample['segmented_passage'])
+                sample['query_token_ids'] = vocab.convert_to_ids(sample['query'])
+                sample['passage_token_ids'] = vocab.convert_to_ids(sample['passage'])
                 sample['alternatives_token_ids'] = []
-                for ans in sample['segmented_alternatives']:
+                for ans in sample['alternatives']:
                     sample['alternatives_token_ids'].append(vocab.convert_to_ids(ans))
 
     def gen_mini_batches(self, set_name, batch_size, pad_id, shuffle=True):

@@ -110,7 +110,8 @@ class RCModel(object):
                 initializer=tf.constant_initializer(self.vocab.embeddings[1:]),
                 trainable=False
             )
-            padding_vec = tf.Variable(tf.random_uniform([1, 300], -0.05, 0.05))
+            # EDIT: @shesl-meow: padding_vec = tf.Variable(tf.random_uniform([1, 300], -0.05, 0.05))
+            padding_vec = tf.Variable(tf.random_uniform([1, 200], -0.05, 0.05))
             # 只对填充向量进行训练，其余向量保持word2vec的结果
             self.word_embeddings = tf.concat([padding_vec, self.pre_embeddings], 0)
             self.p_emb = tf.nn.embedding_lookup(self.word_embeddings, self.p)
@@ -177,9 +178,11 @@ class RCModel(object):
         with tf.variable_scope('p-conv'):
             for i, filter_size in enumerate(filter_sizes):
                 with tf.name_scope("conv-maxpool-%s" % filter_size):
-                    filter_shape = [filter_size, self.hidden_size * 2, 1, 300]
+                    # EDIT: @shesl-meow: filter_shape = [filter_size, self.hidden_size * 2, 1, 300]
+                    filter_shape = [filter_size, self.hidden_size * 2, 1, 200]
                     W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="W")
-                    b = tf.Variable(tf.constant(0.1, shape=[300]), name="b")
+                    # EDIT: @shesl-meow: b = tf.Variable(tf.constant(0.1, shape=[300]), name="b")
+                    b = tf.Variable(tf.constant(0.1, shape=[200]), name="b")
                     conv = tf.nn.conv2d(tf.expand_dims(self.rou_p_encodes, -1), W, strides=[1, 1, 1, 1],
                                         padding="VALID", name="conv")
                     h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
@@ -196,7 +199,8 @@ class RCModel(object):
             cap_gate = tf.reshape(tf.layers.dense(tf.concat(
                 [tf.reshape(alt_cap, [-1, 6 * self.hidden_size]), tf.expand_dims(self.choose_type, 1),
                  cast(self.p_length), cast(self.q_length)], -1), 1, activation=tf.nn.sigmoid), [-1, 1, 1, 1, 1])
-            self.ref_cap = tf.reshape(alt_cap * cap_gate + cls_cap * (1 - cap_gate), [-1, 300, 3])
+            # EDIT: @shesl-meow: self.ref_cap = tf.reshape(alt_cap * cap_gate + cls_cap * (1 - cap_gate), [-1, 300, 3])
+            self.ref_cap = tf.reshape(alt_cap * cap_gate + cls_cap * (1 - cap_gate), [-1, 200, 3])
             # 去噪
             with tf.variable_scope('r-routing'):
                 memorty_cap = tf.Variable(tf.truncated_normal([1, 1, self.hidden_size * 2, 1, 3]))
@@ -207,7 +211,8 @@ class RCModel(object):
         解码顶层capsules，根据其模长softmax作为答案的概率
         """
         capsule_lengths = tf.squeeze(
-            tf.matmul(tf.reshape(tf.split(self.ar_r_capsule, 3, axis=2)[0], [-1, 1, 300]), self.ref_cap), 1)
+            # EDIT: @shesl-meow: tf.matmul(tf.reshape(tf.split(self.ar_r_capsule, 3, axis=2)[0], [-1, 1, 300]), self.ref_cap), 1)
+            tf.matmul(tf.reshape(tf.split(self.ar_r_capsule, 3, axis=2)[0], [-1, 1, 200]), self.ref_cap), 1)
         self.alternatives_probs = softmax(capsule_lengths, 1)
 
     def _compute_loss(self):
@@ -378,12 +383,12 @@ class RCModel(object):
         for sample, prob in zip(batches, probs):
             best_answer_index = np.argmax(prob)
             pred_answer = ''
-            for i in sample['segmented_alternatives'][best_answer_index]:
+            for i in sample['alternatives'][best_answer_index]:
                 pred_answer += i
             if 'answer' in sample:
                 pred_answers.append({'query_id': sample['query_id'],
                                      'pred_answer': pred_answer,
-                                     'query': sample['segmented_query'],
+                                     'query': sample['query'],
                                      'answer': sample['answer']}
                                     )
             else:
